@@ -73,6 +73,25 @@
 		</div>
 		{% endfor %}
 	</div>
+	<div>
+		<button type="button" onclick="deleteVenue(this)" data-id="{{ venue.id }}" >&cross; Delete Venue</button>
+	</div>
+</section>
+<section>
+	<script>
+		function deleteVenue(e) {
+			console.log('event', e);
+			console.log('venueid', e.dataset.id);
+			const venueId = e.dataset.id;
+			fetch('/venues/' + venueId, {
+				method: 'DELETE'
+			}).then(function(response){
+				if (response.redirected) {
+    				window.location.href = response.url;
+				}				
+			});
+		}
+	</script>
 </section>
 
 {% endblock %}
