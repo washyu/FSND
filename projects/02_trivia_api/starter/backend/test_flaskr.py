@@ -18,6 +18,17 @@ class TriviaTestCase(unittest.TestCase):
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
+        self.new_question = {
+            'question': 'Test question',
+            'answer': 'Test answer',
+            'category': 1,
+            'difficulty': 1
+        }
+
+        self.search_question = {
+            'searchTerm': 'Test question'
+        }
+
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -28,6 +39,56 @@ class TriviaTestCase(unittest.TestCase):
     def tearDown(self):
         """Executed after reach test"""
         pass
+
+    def test_can_get_catagories(self):
+        res = self.client().get('/api/categories')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertNotEqual(len(data['categories']), 0)
+
+    def test_try_to_delete_an_invalid_question(self):
+        res = self.client().delete('/api/questions/1')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+
+    def test_create_new_question(self):
+        res = self.client().post('/api/questions', json = self.new_question)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+
+    def test_search_question(self):
+        res = self.client().post('/api/questions', json = self.search_question)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertGreaterEqual(len(data['questions']), 1)
+
+    def try_to_delete_a_valid_question(self):
+        res = self.client().delete('/api/questions/5')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+
+    def test_getting_quetions_page_returns_different_quetions(self):
+        res = self.client().get('/api/questions?page=1')
+        page1 = json.loads(res.data)
+        res = self.client().get('/api/questions?page=2')
+        page2 = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(page1['questions'])
+        self.assertTrue(len(page1['questions']))
+        self.assertTrue(page2['questions'])
+        self.assertTrue(len(page2['questions']))
+        self.assertNotEqual(page1, page2)
 
     """
     TODO
